@@ -37,6 +37,15 @@ from kivy.uix.image import Image
 
 import schedule
 
+# ═══════════════════════════════════════════════════════════
+# LOGGING (Setup first, before any logging calls)
+# ═══════════════════════════════════════════════════════════
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # استيراد اختياري للمكتبات التي قد لا تكون متوفرة على Android
 try:
     from kivy.garden.sounddevice import SoundFile
@@ -49,15 +58,6 @@ try:
 except ImportError:
     logger.warning("⚠️ Matplotlib غير متوفرة")
     FigureCanvasKivyAgg = None
-
-# ═══════════════════════════════════════════════════════════
-# LOGGING
-# ═══════════════════════════════════════════════════════════
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 # ═══════════════════════════════════════════════════════════
 # PATHS & CONFIG
