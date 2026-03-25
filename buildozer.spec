@@ -45,16 +45,5 @@ warn_on_root = 1
 android.release_artifact = apk
 fullscreen = 1
 android.allow_backup = True
-
-# تحسينات البناء
 android.entrypoint = org.renpy.android.PythonActivity
 android.skip_update = False
-android.gradle_dependencies = 
-
-# تنظيف وتحسين
-p4a.source_dir =
-p4a.local_recipes = ./p4a_recipes/
-
-# استخدام prebuilts عند المرة القادمة
-android.release_artifact = apk
-android.copy_libs = 1
