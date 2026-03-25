@@ -117,7 +117,13 @@ class Tapo:
 
     def connect(self, ip, em, pw):
         try:
-            from PyP100 import PyP100
+            try:
+                from PyP100 import PyP100
+            except ImportError:
+                logger.error("❌ PyP100 مكتبة غير متوفرة - تثبيت: pip install PyP100")
+                self.ok = False
+                return
+            
             self._connect_attempts = 0
             max_attempts = 3
             
@@ -181,7 +187,13 @@ class Gree:
 
     async def _connect(self, ip, mac):
         try:
-            from greeclimate.device import Device, DeviceInfo
+            try:
+                from greeclimate.device import Device, DeviceInfo
+            except ImportError:
+                logger.error("❌ greeclimate مكتبة غير متوفرة - تثبيت: pip install greeclimate")
+                self.ok = False
+                return
+            
             mac = mac.replace(":", "").replace("-", "").lower()
             if len(mac) != 12:
                 mac = "aabbccddeeff"
