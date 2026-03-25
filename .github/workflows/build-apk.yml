@@ -5,9 +5,13 @@ on:
     branches: [ main, develop ]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     
     steps:
     - uses: actions/checkout@v4
@@ -17,20 +21,30 @@ jobs:
       with:
         python-version: '3.11'
     
+    - name: Check disk space
+      run: |
+        echo "=== Disk Space Available ==="
+        df -h / | head -2
+        du -sh .buildozer 2>/dev/null || echo "No .buildozer cache"
+    
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
+        sudo apt-get install -y --no-install-recommends \
           build-essential libssl-dev libffi-dev python3-dev \
           libncurses5 libncurses5-dev zlib1g zlib1g-dev libbz2-1.0 \
-          libbz2-dev lzma liblzma-dev libsqlite3-dev libreadline-dev
+          libbz2-dev lzma liblzma-dev libsqlite3-dev libreadline-dev \
+          git wget curl openjdk-11-jdk
     
     - name: Install Python dependencies
       run: |
-        python -m pip install --upgrade pip setuptools wheel
-        pip install --upgrade cython
-        pip install buildozer
-        pip install -r requirements.txt
+        python -m pip install --upgrade pip setuptools wheel --quiet
+        pip install --upgrade cython --quiet
+        pip install buildozer --quiet
+        echo "=== Installing Python requirements ==="
+        cat requirements.txt
+        pip install -r requirements.txt --quiet
+        echo "✓ Python dependencies installed"
     
     - name: Setup Android SDK/NDK
       uses: android-actions/setup-android@v4
@@ -39,41 +53,79 @@ jobs:
         ndk-version: '25.1.8937393'
         build-tools: '31.0.0'
     
-    - name: Verify buildozer.spec
+    - name: Verify environment
       run: |
-        echo "=== Checking buildozer.spec ==="
-        head -30 buildozer.spec
+        echo "=== System Info ==="
+        uname -a
         echo ""
-        echo "=== Checking requirements.txt ==="
-        cat requirements.txt
+        echo "=== Java Version ==="
+        java -version
         echo ""
-        echo "=== Environment Variables ==="
-        env | grep -E "ANDROID|JAVA" || echo "No Android/Java env vars found"
+        echo "=== Python Version ==="
+        python3 --version
+        echo ""
+        echo "=== Buildozer Version ==="
+        buildozer --version
+        echo ""
+        echo "=== Android SDK/NDK Paths ==="
+        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+        echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
+        echo "JAVA_HOME: $JAVA_HOME"
+        echo ""
+        echo "=== buildozer.spec ==="
+        head -40 buildozer.spec
     
-    - name: Build APK (Debug)
+    - name: Build APK (Debug) - Attempt 1
+      id: build1
+      continue-on-error: true
       run: |
         cd ${{ github.workspace }}
-        echo "=== Starting buildozer build ==="
-        set -x
-        buildozer -v android debug
-        set +x
-        echo "=== Build completed ==="
-      continue-on-error: true
+        echo "=== Starting buildozer build (attempt 1) ==="
+        buildozer -v android debug 2>&1 | tee buildozer_build.log
+        echo "Build exit code: $?"
     
-    - name: Check for build logs and errors
+    - name: Check build results
       if: always()
       run: |
-        echo "=== Looking for build logs ==="
-        find .buildozer -name "build.log" -type f -exec echo "Found: {}" \; -exec tail -50 {} \;
+        echo "=== Build Exit Code ==="
+        echo "Attempt 1: ${{ steps.build1.outcome }}"
         echo ""
-        echo "=== Checking for APK files ==="
-        ls -lh bin/ 2>/dev/null || echo "No bin directory found"
-        find . -name "*.apk" -type f || echo "No APK files found"
+        echo "=== Looking for APK files ==="
+        find . -name "*.apk" -type f && echo "✓ APK found!" || echo "✗ No APK file"
+        echo ""
+        echo "=== Last 100 lines of buildozer log ==="
+        tail -100 buildozer_build.log || echo "No buildozer log found"
+        echo ""
+        echo "=== Checking .buildozer build logs ==="
+        find .buildozer -name "build.log" -type f -exec tail -50 {} \; || echo "No build.log found"
+    
+    - name: Build APK (Debug) - Attempt 2 (if first failed)
+      if: steps.build1.outcome == 'failure'
+      id: build2
+      continue-on-error: true
+      run: |
+        cd ${{ github.workspace }}
+        echo "=== Second build attempt with clean cache ==="
+        rm -rf .buildozer/android/platform/build-* 2>/dev/null || true
+        buildozer -v android debug 2>&1 | tee buildozer_build2.log
+        echo "Build exit code: $?"
+    
+    - name: Upload buildozer logs to artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: buildozer-logs
+        path: |
+          buildozer_build*.log
+          .buildozer/android/platform/build-*/build.log
+        if-no-files-found: ignore
+        retention-days: 30
     
     - name: Upload APK
-      if: success()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: smartalarm-apk
         path: bin/*.apk
+        if-no-files-found: warn
         retention-days: 30

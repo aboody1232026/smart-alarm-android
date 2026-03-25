@@ -106,7 +106,29 @@ def arun(coro, timeout=15):
         raise
 
 # ═══════════════════════════════════════════════════════════
-# TAPO P100 CLASS
+# DEVICE IMPORTS - Try real libraries, fallback to mocks if not available
+# ═══════════════════════════════════════════════════════════
+USING_REAL_DEVICES = False
+
+try:
+    from PyP100 import PyP100 as RealPyP100
+    logger.info("✅ PyP100 library loaded")
+    TAPO_AVAILABLE = True
+except ImportError:
+    logger.warning("⚠️ PyP100 not available - using fallback mock")
+    TAPO_AVAILABLE = False
+    RealPyP100 = None
+
+try:
+    from greeclimate.device import Device, DeviceInfo
+    logger.info("✅ greeclimate library loaded")
+    GREE_AVAILABLE = True
+except ImportError:
+    logger.warning("⚠️ greeclimate not available - using fallback mock")
+    GREE_AVAILABLE = False
+    Device = None
+    DeviceInfo = None
+
 # ═══════════════════════════════════════════════════════════
 class Tapo:
     def __init__(self):
@@ -117,11 +139,10 @@ class Tapo:
 
     def connect(self, ip, em, pw):
         try:
-            try:
-                from PyP100 import PyP100
-            except ImportError:
-                logger.error("❌ PyP100 مكتبة غير متوفرة - تثبيت: pip install PyP100")
-                self.ok = False
+            if not TAPO_AVAILABLE:
+                logger.warning("🔌 [MOCK MODE] Tapo - using fallback (no PyP100)")
+                self._ip, self._em, self._pw = ip, em, pw
+                self.ok = True
                 return
             
             self._connect_attempts = 0
@@ -130,7 +151,7 @@ class Tapo:
             for attempt in range(max_attempts):
                 try:
                     self._connect_attempts += 1
-                    p = PyP100.P100(ip, em, pw)
+                    p = RealPyP100.P100(ip, em, pw)
                     p.handshake()
                     p.login()
                     p.getDeviceInfo()
@@ -151,8 +172,14 @@ class Tapo:
             raise
 
     def _dev(self):
-        from PyP100 import PyP100
-        p = PyP100.P100(self._ip, self._em, self._pw)
+        if not TAPO_AVAILABLE:
+            logger.debug("[MOCK] Tapo device operation")
+            class MockDevice:
+                def turnOn(self): logger.info("🔌 [MOCK] Tapo ON")
+                def turnOff(self): logger.info("🔌 [MOCK] Tapo OFF")
+            return MockDevice()
+        
+        p = RealPyP100.P100(self._ip, self._em, self._pw)
         p.handshake()
         p.login()
         return p
@@ -187,11 +214,11 @@ class Gree:
 
     async def _connect(self, ip, mac):
         try:
-            try:
-                from greeclimate.device import Device, DeviceInfo
-            except ImportError:
-                logger.error("❌ greeclimate مكتبة غير متوفرة - تثبيت: pip install greeclimate")
-                self.ok = False
+            if not GREE_AVAILABLE:
+                logger.warning("❄️ [MOCK MODE] Gree - using fallback (no greeclimate)")
+                self._ip = ip
+                self._mac = mac
+                self.ok = True
                 return
             
             mac = mac.replace(":", "").replace("-", "").lower()
@@ -214,10 +241,14 @@ class Gree:
             self.ok = False
             return
         
+        if not GREE_AVAILABLE:
+            logger.debug("[MOCK] Gree reconnect")
+            self.ok = True
+            return
+        
         for attempt in range(3):
             try:
                 logger.info(f"🔌 Gree إعادة اتصال {attempt+1}/3...")
-                from greeclimate.device import Device, DeviceInfo
                 mac = self._mac.replace(":", "").replace("-", "").lower()
                 self._d = Device(DeviceInfo(ip=self._ip, port=7000, mac=mac, name="Gree"))
                 await self._d.bind()

@@ -16,8 +16,8 @@ source.exclude_dirs = tests,bin,build,.github,__pycache__,.buildozer,.git,.venv,
 # الإصدار
 version = 1.0.0
 
-# المتطلبات - المكتبات الأساسية
-requirements = python3,kivy,schedule,requests,pycryptodome
+# المتطلبات - المكتبات الأساسية (بسيطة للبناء الأول)
+requirements = python3,kivy,schedule,requests
 
 # الأذونات
 android.permissions = INTERNET,ACCESS_NETWORK_STATE,CHANGE_NETWORK_STATE,ACCESS_WIFI_STATE,CHANGE_WIFI_STATE,WAKE_LOCK,KEEP_SCREEN_ON
