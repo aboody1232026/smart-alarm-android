@@ -77,7 +77,7 @@ jobs:
       continue-on-error: true
       run: |
         echo "=== Starting buildozer build ==="
-        buildozer -v android debug 2>&1
+        buildozer -v android debug 2>&1 | tee build_output.log
         exit_code=$?
         echo "Build exit code: $exit_code"
         exit $exit_code
@@ -110,8 +110,15 @@ jobs:
       continue-on-error: true
       run: |
         echo "=== FULL BUILD LOGS ===" 
+        echo ""
+        echo "=== Build output log ==="
+        if [ -f build_output.log ]; then
+          cat build_output.log
+        fi
+        echo ""
+        echo "=== .buildozer logs ==="
         if [ -d ".buildozer/android/platform" ]; then
-          find .buildozer/android/platform -name "*.log" -type f -exec echo "--- {} ---" \; -exec cat {} \;
+          find .buildozer/android/platform -name "*.log" -type f -exec echo "--- {} ---" \; -exec tail -50 {} \;
         else
-          echo "No build logs found"
+          echo "No .buildozer directory found"
         fi
