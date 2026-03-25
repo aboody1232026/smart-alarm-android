@@ -14,10 +14,10 @@ jobs:
     timeout-minutes: 90
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.11'
     
@@ -74,7 +74,8 @@ jobs:
       continue-on-error: true
       run: |
         echo "=== Starting buildozer build ==="
-        buildozer -v android debug 2>&1 | tail -50
+        set -x
+        buildozer -v android debug 2>&1
         exit_code=$?
         echo "Build exit code: $exit_code"
         exit $exit_code
@@ -94,10 +95,21 @@ jobs:
     
     - name: Upload APK
       if: always()
-      continue-on-error: true
-      uses: actions/upload-artifact@v4
+      continue-on-error: true5
       with:
         name: smartalarm-apk
         path: bin/*.apk
         if-no-files-found: warn
+        retention-days: 30
+    
+    - name: Capture Build Logs
+      if: always()
+      continue-on-error: true
+      run: |
+        echo "=== FULL BUILD LOGS ===" 
+        if [ -d ".buildozer/android/platform" ]; then
+          find .buildozer/android/platform -name "*.log" -type f -exec echo "--- {} ---" \; -exec cat {} \;
+        else
+          echo "No build logs found"
+        fi warn
         retention-days: 30
