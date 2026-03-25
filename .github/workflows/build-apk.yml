@@ -48,9 +48,12 @@ jobs:
     - name: Setup Android SDK/NDK
       uses: android-actions/setup-android@v4
       with:
-        api-levels: '31'
-        ndk-version: '25.1.8937393'
-        build-tools: '31.0.0'
+        accept-android-sdk-licenses: true
+        packages: |
+          platform-tools
+          platforms;android-31
+          ndk;25.1.8937393
+          build-tools;31.0.0
     
     - name: Verify environment
       run: |
