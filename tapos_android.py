@@ -29,11 +29,9 @@ from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
 from kivy.uix.popup import Popup
-from kivy.uix.scrolledtext import ScrolledTextInput
 from kivy.uix.progressbar import ProgressBar
 from kivy.clock import Clock, mainthread
 from kivy.core.audio import SoundLoader
-from kivy.uix.image import Image
 
 import schedule
 

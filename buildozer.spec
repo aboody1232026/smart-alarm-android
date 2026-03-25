@@ -49,11 +49,3 @@ warn_on_root = 1
 android.release_artifact = apk
 fullscreen = 1
 android.allow_backup = True
-android.gradle_options = 
-
-# Allow downloading required dependencies
-android.add_src = 
-
-# Compatibility settings
-android.presplash_alpha = 255
-android.uses_permissions = INTERNET,ACCESS_NETWORK_STATE,CHANGE_NETWORK_STATE,ACCESS_WIFI_STATE,CHANGE_WIFI_STATE,WAKE_LOCK,KEEP_SCREEN_ON 
