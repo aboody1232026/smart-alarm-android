@@ -1,2 +1,6 @@
 kivy==2.3.1
 schedule==1.2.0
+PyP100>=0.0.1
+greeclimate>=1.0.0
+requests>=2.31.0
+pycryptodome>=3.17.0

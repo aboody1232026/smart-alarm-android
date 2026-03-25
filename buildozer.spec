@@ -16,8 +16,8 @@ source.exclude_dirs = tests,bin,build,.github,__pycache__,.buildozer,.git,.venv,
 # الإصدار
 version = 1.0.0
 
-# المتطلبات - تبسيط المكتبات المشكلة
-requirements = python3,kivy,schedule,android,jnius
+# المتطلبات - المكتبات الأساسية
+requirements = python3,kivy,schedule,requests,pycryptodome
 
 # الأذونات
 android.permissions = INTERNET,ACCESS_NETWORK_STATE,CHANGE_NETWORK_STATE,ACCESS_WIFI_STATE,CHANGE_WIFI_STATE,WAKE_LOCK,KEEP_SCREEN_ON
@@ -45,5 +45,15 @@ android.accept_sdk_license = True
 log_level = 2
 warn_on_root = 1
 
-# الأخرى
-android.gradle_dependencies = 
+# Buildozer settings for stability
+android.release_artifact = apk
+fullscreen = 1
+android.allow_backup = True
+android.gradle_options = 
+
+# Allow downloading required dependencies
+android.add_src = 
+
+# Compatibility settings
+android.presplash_alpha = 255
+android.uses_permissions = INTERNET,ACCESS_NETWORK_STATE,CHANGE_NETWORK_STATE,ACCESS_WIFI_STATE,CHANGE_WIFI_STATE,WAKE_LOCK,KEEP_SCREEN_ON 

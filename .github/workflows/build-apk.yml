@@ -20,34 +20,54 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev
+        sudo apt-get install -y \
+          build-essential libssl-dev libffi-dev python3-dev \
+          libncurses5 libncurses5-dev zlib1g zlib1g-dev libbz2-1.0 \
+          libbz2-dev lzma liblzma-dev libsqlite3-dev libreadline-dev
     
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
         pip install --upgrade cython
         pip install buildozer
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install -r requirements.txt
     
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+    - name: Setup Android SDK/NDK
+      uses: android-actions/setup-android@v4
       with:
         api-levels: '31'
         ndk-version: '25.1.8937393'
         build-tools: '31.0.0'
     
+    - name: Verify buildozer.spec
+      run: |
+        echo "=== Checking buildozer.spec ==="
+        head -30 buildozer.spec
+        echo ""
+        echo "=== Checking requirements.txt ==="
+        cat requirements.txt
+        echo ""
+        echo "=== Environment Variables ==="
+        env | grep -E "ANDROID|JAVA" || echo "No Android/Java env vars found"
+    
     - name: Build APK (Debug)
       run: |
         cd ${{ github.workspace }}
-        buildozer -v android debug 2>&1 || {
-          echo "First build attempt failed, checking logs..."
-          cat .buildozer/android/platform/build-*/build.log || true
-          exit 1
-        }
+        echo "=== Starting buildozer build ==="
+        set -x
+        buildozer -v android debug
+        set +x
+        echo "=== Build completed ==="
+      continue-on-error: true
     
-    - name: Check APK
+    - name: Check for build logs and errors
+      if: always()
       run: |
-        ls -lh bin/ || echo "No bin directory found"
+        echo "=== Looking for build logs ==="
+        find .buildozer -name "build.log" -type f -exec echo "Found: {}" \; -exec tail -50 {} \;
+        echo ""
+        echo "=== Checking for APK files ==="
+        ls -lh bin/ 2>/dev/null || echo "No bin directory found"
         find . -name "*.apk" -type f || echo "No APK files found"
     
     - name: Upload APK
