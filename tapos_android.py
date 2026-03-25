@@ -33,11 +33,22 @@ from kivy.uix.scrolledtext import ScrolledTextInput
 from kivy.uix.progressbar import ProgressBar
 from kivy.clock import Clock, mainthread
 from kivy.core.audio import SoundLoader
-from kivy.garden.sounddevice import SoundFile
 from kivy.uix.image import Image
-from kivy.garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
 
 import schedule
+
+# استيراد اختياري للمكتبات التي قد لا تكون متوفرة على Android
+try:
+    from kivy.garden.sounddevice import SoundFile
+except ImportError:
+    logger.warning("⚠️ SoundFile غير متوفرة - سيتم استخدام بديل")
+    SoundFile = None
+
+try:
+    from kivy.garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
+except ImportError:
+    logger.warning("⚠️ Matplotlib غير متوفرة")
+    FigureCanvasKivyAgg = None
 
 # ═══════════════════════════════════════════════════════════
 # LOGGING

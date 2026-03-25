@@ -13,10 +13,10 @@ source.include_exts = py,png,jpg,kv,atlas,json
 version = 1.0.0
 
 # المتطلبات
-requirements = python3,kivy,schedule,PyP100,greeclimate,android,jnius
+requirements = python3,kivy,schedule,PyP100,greeclimate,android,jnius,requests,cryptography
 
 # الأذونات
-android.permissions = INTERNET,ACCESS_NETWORK_STATE,CHANGE_NETWORK_STATE,ACCESS_WIFI_STATE,CHANGE_WIFI_STATE,WAKE_LOCK,KEEP_SCREEN_ON
+android.permissions = INTERNET,ACCESS_NETWORK_STATE,CHANGE_NETWORK_STATE,ACCESS_WIFI_STATE,CHANGE_WIFI_STATE,WAKE_LOCK,KEEP_SCREEN_ON,MODIFY_AUDIO_SETTINGS
 
 # ميزات Android
 android.features = android.hardware.wifi
